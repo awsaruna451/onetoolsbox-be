@@ -26,6 +26,11 @@ jobs:
           npm install
           npm install -g serverless
 
+      - name: Install Python dependencies for Lambda
+        run: |
+          # Install dependencies for Lambda packaging
+          pip install -r lambda_requirements.txt
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:

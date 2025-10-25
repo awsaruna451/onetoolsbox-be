@@ -55,12 +55,22 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
             allowCredentials: false
+  
+  test:
+    handler: test_lambda.lambda_handler
+    events:
+      - http:
+          path: /test
+          method: GET
+          cors:
+            origin: '*'
 
 plugins:
   - serverless-python-requirements
 
 custom:
   pythonRequirements:
+    fileName: lambda_requirements.txt
     dockerizePip: true
     layer:
       compatibleRuntimes:
