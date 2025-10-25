@@ -79,7 +79,6 @@ downloads/
 .aws-sam/
 samconfig.toml
 node_modules/
-package-lock.json
 
 # Lambda environment
 .env.lambda

@@ -1,0 +1,20 @@
+{
+  "name": "youtube-caption-extractor-api",
+  "version": "1.0.0",
+  "description": "YouTube Caption Extractor API - AWS Lambda deployment",
+  "scripts": {
+    "deploy": "serverless deploy",
+    "deploy:dev": "serverless deploy --stage dev",
+    "deploy:prod": "serverless deploy --stage prod",
+    "remove": "serverless remove",
+    "logs": "serverless logs -f api",
+    "invoke": "serverless invoke -f api"
+  },
+  "devDependencies": {
+    "serverless": "^3.38.0",
+    "serverless-python-requirements": "^6.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
