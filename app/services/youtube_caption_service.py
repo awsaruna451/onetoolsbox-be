@@ -40,6 +40,21 @@ class YouTubeCaptionService:
                 'quiet': True,
                 'no_warnings': True,
                 'skip_download': True,
+                # Bot detection avoidance
+                'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'referer': 'https://www.youtube.com/',
+                'origin': 'https://www.youtube.com',
+                'headers': {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+                    'Accept-Language': 'en-US,en;q=0.9',
+                    'Accept-Encoding': 'gzip, deflate, br',
+                    'DNT': '1',
+                    'Connection': 'keep-alive',
+                    'Upgrade-Insecure-Requests': '1',
+                },
+                'sleep_interval': 1,  # Add delay between requests
+                'max_sleep_interval': 3,  # Maximum sleep interval
             }
             
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -62,8 +77,19 @@ class YouTubeCaptionService:
             return video_info
             
         except Exception as e:
-            logger.error(f"Failed to extract video info: {str(e)}")
-            raise Exception(f"Failed to extract video information: {str(e)}")
+            error_msg = str(e)
+            logger.error(f"Failed to extract video info: {error_msg}")
+            
+            # Check for bot detection
+            if "Sign in to confirm you're not a bot" in error_msg or "bot" in error_msg.lower():
+                raise Exception(
+                    "YouTube is blocking automated requests. This video may require manual verification. "
+                    "Please try again later or use a different video."
+                )
+            elif "Video unavailable" in error_msg:
+                raise Exception("This video is unavailable or private.")
+            else:
+                raise Exception(f"Failed to extract video information: {error_msg}")
     
     @staticmethod
     def _get_cache_key(url: str, output_format: str) -> str:
@@ -76,7 +102,7 @@ class YouTubeCaptionService:
         return time.time() - timestamp < YouTubeCaptionService._cache_ttl
     
     @staticmethod
-    def extract_captions(url: str, output_format: str = "txt") -> Dict:
+    def extract_captions(url: str, output_format: str = "txt", max_retries: int = 3) -> Dict:
         """
         Extract captions from YouTube video
         
@@ -102,13 +128,46 @@ class YouTubeCaptionService:
             else:
                 # Remove expired cache entry
                 del YouTubeCaptionService._cache[cache_key]
+
+        # Retry logic for bot detection
+        last_error = None
+        for attempt in range(max_retries):
+            try:
+                return YouTubeCaptionService._extract_captions_internal(url, output_format, cache_key)
+            except Exception as e:
+                last_error = e
+                error_msg = str(e)
+                
+                # Check if it's a bot detection error
+                if "Sign in to confirm you're not a bot" in error_msg or "bot" in error_msg.lower():
+                    if attempt < max_retries - 1:
+                        wait_time = (2 ** attempt) + 1  # Exponential backoff: 2, 3, 5 seconds
+                        logger.warning(f"Bot detection on attempt {attempt + 1}/{max_retries}. Retrying in {wait_time} seconds...")
+                        time.sleep(wait_time)
+                        continue
+                    else:
+                        raise Exception(
+                            "YouTube is blocking automated requests after multiple attempts. "
+                            "This video may require manual verification. Please try again later or use a different video."
+                        )
+                else:
+                    # Non-bot error, don't retry
+                    raise e
         
+        # If we get here, all retries failed
+        raise last_error
+
+    @staticmethod
+    def _extract_captions_internal(url: str, output_format: str, cache_key: str) -> Dict:
+        """
+        Internal method to extract captions (used by retry logic)
+        """
         try:
             # Get video info
             video_info = YouTubeCaptionService.extract_video_info(url)
             logger.info(f"Video: {video_info['title']} (Duration: {video_info['duration']}s)")
             
-            # Configure yt-dlp for subtitle extraction with performance optimizations
+            # Configure yt-dlp for subtitle extraction with bot detection avoidance
             ydl_opts = {
                 'writesubtitles': True,
                 'writeautomaticsub': True,
@@ -116,13 +175,28 @@ class YouTubeCaptionService:
                 'skip_download': True,
                 'quiet': True,
                 'no_warnings': True,
+                # Bot detection avoidance
+                'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'referer': 'https://www.youtube.com/',
+                'origin': 'https://www.youtube.com',
+                'headers': {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+                    'Accept-Language': 'en-US,en;q=0.9',
+                    'Accept-Encoding': 'gzip, deflate, br',
+                    'DNT': '1',
+                    'Connection': 'keep-alive',
+                    'Upgrade-Insecure-Requests': '1',
+                },
                 # Performance optimizations
-                'socket_timeout': 10,  # Reduce timeout
-                'retries': 2,  # Reduce retries
-                'fragment_retries': 2,
-                'extractor_retries': 2,
+                'socket_timeout': 15,  # Increased timeout
+                'retries': 3,  # Increased retries
+                'fragment_retries': 3,
+                'extractor_retries': 3,
                 'http_chunk_size': 10485760,  # 10MB chunks
-                'concurrent_fragment_downloads': 3,  # Parallel downloads
+                'concurrent_fragment_downloads': 2,  # Reduced parallel downloads
+                'sleep_interval': 1,  # Add delay between requests
+                'max_sleep_interval': 5,  # Maximum sleep interval
             }
             
             # Extract subtitles
