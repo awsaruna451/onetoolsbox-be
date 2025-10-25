@@ -1,0 +1,14 @@
+# Lambda-specific requirements (optimized for AWS Lambda)
+fastapi>=0.104.1
+pydantic>=2.8.0
+pydantic-settings>=2.4.0
+mangum>=0.17.0
+yt-dlp>=2023.11.16
+requests>=2.31.0
+python-dotenv>=1.0.0
+
+# Remove heavy dependencies for Lambda
+# - uvicorn (not needed in Lambda)
+# - gunicorn (not needed in Lambda)
+# - pytest (not needed in Lambda)
+# - httpx (not needed in Lambda)

@@ -1,0 +1,49 @@
+name: Deploy YouTube Caption Extractor API to AWS Lambda
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Set up Node.js (for Serverless Framework)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Install Node.js dependencies
+        run: npm ci
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION || 'us-east-1' }}
+
+      - name: Install Python dependencies for Lambda
+        run: |
+          # Install dependencies in the current directory for Lambda packaging
+          pip install -r requirements.txt -t ./
+
+      - name: Deploy to AWS using Serverless Framework
+        run: |
+          # Clean up any previous deployments
+          rm -rf .serverless
+          # Deploy with verbose output
+          npx serverless deploy --stage dev --verbose

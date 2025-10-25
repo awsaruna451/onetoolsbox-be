@@ -1,0 +1,26 @@
+# FastAPI and dependencies
+fastapi>=0.104.1
+uvicorn[standard]>=0.24.0
+pydantic>=2.8.0
+pydantic-settings>=2.4.0
+
+# AWS Lambda support
+mangum>=0.17.0
+
+# YouTube caption extraction
+yt-dlp>=2023.11.16
+
+# HTTP requests
+requests>=2.31.0
+
+# Environment variables
+python-dotenv>=1.0.0
+
+# Production server (optional, uvicorn is included)
+gunicorn>=21.2.0
+
+# Testing (optional)
+pytest>=7.4.3
+pytest-asyncio>=0.21.1
+httpx>=0.25.2
+

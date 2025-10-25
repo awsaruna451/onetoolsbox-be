@@ -1,0 +1,105 @@
+service: youtube-caption-extractor-api
+
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: python3.11
+  stage: ${opt:stage, 'dev'}
+  region: ${opt:region, 'us-east-1'}
+  timeout: 30
+  memorySize: 1024
+  environment:
+    STAGE: ${self:provider.stage}
+    LOG_LEVEL: INFO
+    LOG_FORMAT: json
+    MAX_VIDEO_DURATION: 7200
+    CACHE_TTL: 3600
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+          Resource: "arn:aws:logs:*:*:*"
+
+functions:
+  api:
+    handler: lambda_handler.handler
+    events:
+      - http:
+          path: /{proxy+}
+          method: ANY
+          cors:
+            origin: '*'
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+            allowCredentials: false
+      - http:
+          path: /
+          method: ANY
+          cors:
+            origin: '*'
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+            allowCredentials: false
+
+plugins:
+  - serverless-python-requirements
+
+custom:
+  pythonRequirements:
+    dockerizePip: true
+    layer:
+      compatibleRuntimes:
+        - python3.11
+    pipCmdExtraArgs:
+      - --no-cache-dir
+      - --disable-pip-version-check
+    slim: true
+    strip: false
+    slimPatterns:
+      - "**/*.pyc"
+      - "**/__pycache__"
+      - "**/tests"
+      - "**/test_*"
+      - "**/*.pyo"
+      - "**/*.pyd"
+      - "**/.Python"
+      - "**/pip"
+      - "**/setuptools"
+      - "**/pkg_resources"
+      - "**/distutils"
+
+package:
+  patterns:
+    - '!node_modules/**'
+    - '!tests/**'
+    - '!test_*'
+    - '!*.md'
+    - '!*.yml'
+    - '!*.yaml'
+    - '!.git/**'
+    - '!.github/**'
+    - '!youtubev/**'
+    - '!__pycache__/**'
+    - '!*.pyc'
+    - '!*.pyo'
+    - '!*.pyd'
+    - '!.pytest_cache/**'
+    - '!.env*'
+    - '!run*.sh'
+    - '!PROJECT_STRUCTURE.md'
+    - '!QUICKSTART.md'
