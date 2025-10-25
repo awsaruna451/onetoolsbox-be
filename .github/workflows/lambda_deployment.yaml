@@ -32,6 +32,26 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION || 'us-east-1' }}
+        continue-on-error: true
+
+      - name: Check AWS credentials
+        run: |
+          if [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ]; then
+            echo "❌ AWS credentials not found!"
+            echo "Please set the following secrets in your GitHub repository:"
+            echo "  - AWS_ACCESS_KEY_ID"
+            echo "  - AWS_SECRET_ACCESS_KEY"
+            echo "  - AWS_REGION (optional, defaults to us-east-1)"
+            echo ""
+            echo "To set secrets:"
+            echo "1. Go to your repository on GitHub"
+            echo "2. Click on Settings → Secrets and variables → Actions"
+            echo "3. Click 'New repository secret'"
+            echo "4. Add each secret with the appropriate value"
+            exit 1
+          else
+            echo "✅ AWS credentials found"
+          fi
 
       - name: Deploy to AWS using Serverless Framework
         run: |
