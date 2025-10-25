@@ -2,11 +2,39 @@
 AWS Lambda handler for YouTube Caption Extractor API
 """
 import json
-from mangum import Mangum
-from app.main import app
+import sys
+import os
 
-# Create ASGI adapter for Lambda
-handler = Mangum(app, lifespan="off")
+# Add the current directory to Python path
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+try:
+    from mangum import Mangum
+    from app.main import app
+    
+    # Create ASGI adapter for Lambda
+    handler = Mangum(app, lifespan="off")
+    
+except ImportError as e:
+    print(f"Import error: {e}")
+    print(f"Python path: {sys.path}")
+    print(f"Current directory: {os.getcwd()}")
+    print(f"Files in current directory: {os.listdir('.')}")
+    
+    # Create a fallback handler
+    def handler(event, context):
+        return {
+            'statusCode': 500,
+            'headers': {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*'
+            },
+            'body': json.dumps({
+                'success': False,
+                'error': f'Import error: {str(e)}',
+                'message': 'Failed to import required modules'
+            })
+        }
 
 
 def lambda_handler(event, context):

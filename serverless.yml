@@ -70,28 +70,19 @@ plugins:
 
 custom:
   pythonRequirements:
-    fileName: lambda_requirements.txt
     dockerizePip: true
-    layer:
-      compatibleRuntimes:
-        - python3.11
     pipCmdExtraArgs:
       - --no-cache-dir
       - --disable-pip-version-check
-    slim: true
+    slim: false
     strip: false
-    slimPatterns:
-      - "**/*.pyc"
-      - "**/__pycache__"
-      - "**/tests"
-      - "**/test_*"
-      - "**/*.pyo"
-      - "**/*.pyd"
-      - "**/.Python"
-      - "**/pip"
-      - "**/setuptools"
-      - "**/pkg_resources"
-      - "**/distutils"
+    noDeploy:
+      - uvicorn
+      - gunicorn
+      - pytest
+      - pytest-asyncio
+      - httpx
+      - python-dotenv
 
 package:
   patterns:
