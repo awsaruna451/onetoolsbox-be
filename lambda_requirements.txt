@@ -1,4 +1,5 @@
 # Lambda-specific requirements (optimized for AWS Lambda)
+# Core API dependencies
 fastapi==0.104.1
 pydantic==2.8.0
 pydantic-settings==2.4.0
@@ -6,3 +7,12 @@ mangum==0.17.0
 yt-dlp==2023.11.16
 requests==2.31.0
 python-dotenv==1.0.0
+
+# AWS S3 Dependencies
+boto3>=1.28.0  # AWS SDK for Python (already included in Lambda runtime)
+python-multipart==0.0.6  # For file uploads
+
+# NOTE: Voice Cloning Dependencies are EXCLUDED for Lambda deployment
+# TTS library + PyTorch + dependencies exceed Lambda's 250MB limit
+# Voice cloning endpoints will gracefully return 503 in Lambda
+# For voice cloning, deploy to EC2, ECS, or use separate Lambda with Layers
