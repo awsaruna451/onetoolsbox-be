@@ -5,3 +5,17 @@ mangum==0.17.0
 yt-dlp==2023.11.16
 requests==2.31.0
 python-dotenv==1.0.0
+
+# Voice Cloning Dependencies
+TTS==0.22.0
+torch>=2.0.0
+librosa==0.10.1
+soundfile==0.12.1
+numpy>=1.24.0
+python-multipart==0.0.6  # For file uploads
+transformers==4.33.0  # Compatible with TTS 0.22.0
+tokenizers>=0.11.1,<0.14  # Compatible with transformers 4.33.0
+torchcodec>=0.8.0  # Required by TTS for audio processing
+
+# AWS S3 Dependencies
+boto3>=1.28.0  # AWS SDK for Python

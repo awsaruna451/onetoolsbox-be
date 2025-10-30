@@ -20,6 +20,16 @@ class Settings(BaseSettings):
     # CORS
     ALLOWED_ORIGINS: str = "*"
     
+    # URL Shortener Settings
+    BASE_URL: str = "http://localhost:8000/s/"  # Base URL for shortened links
+    
+    # AWS S3 Settings
+    AWS_S3_BUCKET_NAME: str = ""  # S3 bucket name for file storage
+    AWS_S3_FOLDER: str = "voice_samples"  # S3 folder for voice samples
+    AWS_ACCESS_KEY_ID: str = ""  # AWS access key ID
+    AWS_SECRET_ACCESS_KEY: str = ""  # AWS secret access key
+    AWS_REGION: str = "us-east-1"  # AWS region
+    
     # Logging
     LOG_LEVEL: str = "INFO"
     LOG_FORMAT: str = "json"  # json or console

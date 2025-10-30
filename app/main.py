@@ -7,9 +7,11 @@ from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
+from fastapi.responses import RedirectResponse
 from app.core.config import settings
 from app.core.logging_config import logger
-from app.api.v1.routers import captions, health, performance
+from app.api.v1.routers import captions, health, performance, url_shortener, voice_cloning, s3
+from app.services.url_shortener_service import url_shortener_service
 
 
 # Create FastAPI application
@@ -118,6 +120,18 @@ app.include_router(
     performance.router,
     prefix=settings.API_V1_PREFIX
 )
+app.include_router(
+    url_shortener.router,
+    prefix=settings.API_V1_PREFIX
+)
+app.include_router(
+    voice_cloning.router,
+    prefix=settings.API_V1_PREFIX
+)
+app.include_router(
+    s3.router,
+    prefix=settings.API_V1_PREFIX
+)
 
 
 # Health check at root
@@ -131,6 +145,38 @@ async def root():
         "docs_url": "/docs",
         "health_check_url": "/health"
     }
+
+
+# URL Shortener redirect endpoint (without API prefix)
+@app.get("/s/{short_code}")
+async def redirect_short_url(short_code: str):
+    """
+    Redirect from short code to original URL
+    
+    This endpoint handles the actual redirects for shortened URLs.
+    It's at the root level so URLs like /s/abc123 work directly.
+    """
+    try:
+        logger.info(f"Redirecting short code: {short_code}")
+        
+        result = url_shortener_service.expand_url(short_code)
+        
+        if not result.get("success"):
+            logger.warning(f"Short code not found: {short_code}")
+            return JSONResponse(
+                status_code=404,
+                content={"error": "Short URL not found"}
+            )
+        
+        logger.info(f"Redirecting {short_code} to {result['long_url']}")
+        return RedirectResponse(url=result["long_url"], status_code=307)
+        
+    except Exception as e:
+        logger.error(f"Error redirecting short code {short_code}: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={"error": "Failed to redirect"}
+        )
 
 
 if __name__ == "__main__":
